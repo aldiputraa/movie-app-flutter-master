@@ -1,6 +1,6 @@
-# pendidikan
+# Movie App Flutter
 
-A new Flutter project.
+A Flutter project for browsing and discovering movies.
 
 ## Getting Started
 
