@@ -1,14 +1,44 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // Import halaman login
-import 'profil_page.dart'; // Import halaman profil
-import 'tiket_page.dart'; // Import halaman tiket
-import 'disimpan_page.dart'; // Import halaman disimpan dari file terpisah
-import 'tentang_page.dart'; // Import halaman tentang
-import 'pengaturan_page.dart'; // Import halaman pengaturan
 import 'package:shared_preferences/shared_preferences.dart';
+import 'login_page.dart';
+import 'profil_page.dart';
+import 'tiket_page.dart';
+import 'disimpan_page.dart';
+import 'tentang_page.dart';
+import 'pengaturan_page.dart';
+import 'payment_page.dart';
+import 'movie_details_page.dart';
+import 'search_page.dart';
+import 'notification_page.dart';
+import 'notification_service.dart';
+import 'recommendation_page.dart';
+import 'recommendation_service.dart';
+import 'offline_page.dart';
+import 'offline_service.dart';
+import 'wishlist_page.dart';
+import 'wishlist_service.dart';
+import 'my_movies_page.dart';
 
-void main() {
-  runApp(MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  bool isLoggedIn = await checkLoginStatus(); // Memeriksa status login
+
+  runApp(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: isLoggedIn
+          ? HomePage()
+          : LoginPage(), // Menyesuaikan halaman berdasarkan status login
+    ),
+  );
+}
+
+Future<bool> checkLoginStatus() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  // Misalkan Anda menyimpan status login dengan key 'isLoggedIn'
+  return prefs.getBool('isLoggedIn') ??
+      false; // Mengembalikan default false jika tidak ada data
 }
 
 class MyApp extends StatelessWidget {
@@ -20,38 +50,185 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  // Data film untuk digunakan di seluruh aplikasi
+  final Map<String, Map<String, String>> movieDetails = {
+    'Siksa Kubur': {
+      'imagePath': 'assets/siksakubur.png',
+      'genres': 'Horor',
+      'rating': '8.5/10',
+      'harga': '35.000'
+    },
+    'Ancika': {
+      'imagePath': 'assets/ancika.jpeg',
+      'genres': 'Romance, Drama',
+      'rating': '8.3/10',
+      'harga': '35.000'
+    },
+    'Agak Laen': {
+      'imagePath': 'assets/agaklain.jpeg',
+      'genres': 'Horor, Komedi',
+      'rating': '8.7/10',
+      'harga': '35.000'
+    },
+    'Badarawuhi': {
+      'imagePath': 'assets/badarawuhi.jpg',
+      'genres': 'Horor',
+      'rating': '8.2/10',
+      'harga': '35.000'
+    },
+    'Petualangan Anak Penangkap Hantu': {
+      'imagePath': 'assets/petualangan.jpg',
+      'genres': 'Horor, Petualangan, Komedi',
+      'rating': '8/10',
+      'harga': '35.000'
+    },
+    'Sehidup Semati': {
+      'imagePath': 'assets/sehidupsemati.jpg',
+      'genres': 'Horor, Tegang',
+      'rating': '7.8/10',
+      'harga': '35.000'
+    },
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    // Simulasi notifikasi film baru saat aplikasi dibuka
+    _addSampleNotifications();
+  }
+
+  Future<void> _addSampleNotifications() async {
+    // Cek apakah notifikasi sudah ada
+    List<MovieNotification> existingNotifications = await NotificationService.getNotifications();
+    if (existingNotifications.isEmpty) {
+      // Tambahkan beberapa notifikasi contoh
+      await NotificationService.addNewMovieNotification('Siksa Kubur', 'assets/siksakubur.png');
+      await Future.delayed(Duration(milliseconds: 100));
+      await NotificationService.addNewMovieNotification('Ancika', 'assets/ancika.jpeg');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Filmku"), // Judul untuk app bar.
-        backgroundColor: const Color.fromARGB(
-            255, 26, 158, 223), // Warna latar belakang untuk app bar.
+        title: Text("Filmkitaa"),
+        backgroundColor: const Color.fromARGB(255, 26, 158, 223),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SearchPage(movieDetails: movieDetails),
+                ),
+              );
+            },
+          ),
+          FutureBuilder<int>(
+            future: NotificationService.getUnreadCount(),
+            builder: (context, snapshot) {
+              int unreadCount = snapshot.data ?? 0;
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.notifications),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NotificationPage(movieDetails: movieDetails),
+                        ),
+                      ).then((_) {
+                        // Refresh setelah kembali dari halaman notifikasi
+                        setState(() {});
+                      });
+                    },
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          unreadCount.toString(),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
-      backgroundColor:
-          Colors.black26, // Warna latar belakang untuk layar utama.
+      backgroundColor: Colors.black26,
       drawer: Drawer(
-        // Widget drawer untuk menu navigasi.
         child: ListView(
           children: [
-            // Header drawer akun pengguna.
             UserAccountsDrawerHeader(
               accountName: Text(
-                "Fitra Putra Aldi Wijaya", // Nama pengguna.
+                "Fitra Putra Aldi Wijaya",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
-              accountEmail: Text("aldip7669@gmail.com"), // Email pengguna.
+              accountEmail: Text("aldip7669@gmail.com"),
               currentAccountPicture: CircleAvatar(
-                backgroundImage: AssetImage(
-                    'assets/poto.jpg'), // Sesuaikan dengan nama file dan path yang benar.
+                backgroundImage: AssetImage('assets/poto.jpg'),
                 backgroundColor: Colors.grey,
               ),
-
-              decoration: BoxDecoration(
-                  color: Colors.blue), // Dekorasi untuk header drawer.
+              decoration: BoxDecoration(color: Colors.blue),
             ),
-            // List tile untuk opsi navigasi.
+            ListTile(
+              leading: Icon(Icons.recommend),
+              title: Text("Rekomendasi Film"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RecommendationPage(movieDetails: movieDetails)),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.offline_bolt),
+              title: Text("Film Offline"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => OfflinePage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.bookmark),
+              title: Text("Wishlist Film"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => WishlistPage()),
+                );
+              },
+            ),
             ListTile(
               leading: Icon(Icons.person),
               title: Text("Profil"),
@@ -63,7 +240,8 @@ class HomePage extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: Icon(Icons.airplane_ticket_outlined),
+              leading:
+                  Icon(Icons.movie), // Menggunakan ikon film untuk tiket Anda
               title: Text("Tiket Anda"),
               onTap: () {
                 Navigator.push(
@@ -95,6 +273,16 @@ class HomePage extends StatelessWidget {
               ),
             ),
             ListTile(
+              leading: Icon(Icons.movie_filter),
+              title: Text("Film Saya"),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyMoviesPage()),
+                );
+              },
+            ),
+            ListTile(
               leading: Icon(Icons.info),
               title: Text("Tentang"),
               onTap: () {
@@ -124,8 +312,7 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-      body:
-          MovieTicketBooking(), // Tubuh aplikasi berisi widget MovieTicketBooking.
+      body: MovieTicketBooking(movieDetails: movieDetails),
     );
   }
 
@@ -157,7 +344,6 @@ class HomePage extends StatelessWidget {
   }
 
   void _logout(BuildContext context) {
-    // Implementasi aksi keluar, misalnya membersihkan data pengguna dan navigasi ke halaman login
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => LoginPage()),
@@ -165,7 +351,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // Fungsi untuk menghapus daftar tiket dari SharedPreferences
   void _deleteTicketList(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('tiket_list');
@@ -177,7 +362,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // Fungsi untuk menghapus daftar disimpan dari SharedPreferences
   void _deleteSavedList(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('saved_list');
@@ -190,45 +374,36 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// Kelas MovieTicketBooking merepresentasikan widget untuk menampilkan kartu film.
 class MovieTicketBooking extends StatelessWidget {
+  final Map<String, Map<String, String>> movieDetails;
+
+  const MovieTicketBooking({Key? key, required this.movieDetails}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      // Widget scrollable untuk menampilkan beberapa kartu film.
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          // Membangun kartu film menggunakan fungsi _buildMovieCard.
-          _buildMovieCard(context, 'Siksa Kubur', 'assets/siksakubur.png',
-              'Horor', '8.5/10', '35.000'),
-          _buildMovieCard(context, 'Ancika', 'assets/ancika.jpeg',
-              'Romance, Drama', '8.3/10', '35.000'),
-          _buildMovieCard(context, 'Agak Laen', 'assets/agaklain.jpeg',
-              'Horor, Komedi', '8.7/10', '35.000'),
-          _buildMovieCard(context, 'Badarawuhi', 'assets/badarawuhi.jpg',
-              'Horor', '8.2/10', '35.000'),
-          _buildMovieCard(
-              context,
-              'Petualangan Anak Penangkap Hantu',
-              'assets/petualangan.jpg',
-              'Horor, Petualangan, Komedi',
-              '8/10',
-              '35.000'),
-          _buildMovieCard(context, 'Sehidup Semati', 'assets/sehidupsemati.jpg',
-              'Horor, Tegang', '7.8/10', '35.000'),
-        ],
+        children: movieDetails.entries.map((entry) {
+          String title = entry.key;
+          Map<String, String> details = entry.value;
+          return _buildMovieCard(
+            context, 
+            title, 
+            details['imagePath'] ?? '', 
+            details['genres'] ?? '', 
+            details['rating'] ?? '', 
+            details['harga'] ?? ''
+          );
+        }).toList(),
       ),
     );
   }
 
-  // Fungsi untuk membangun kartu film individu.
   Widget _buildMovieCard(BuildContext context, String title, String imagePath,
       String genres, String rating, String harga) {
     return GestureDetector(
-      // Gesture detector untuk menangani ketukan pada kartu film.
       onTap: () {
-        // Navigasi ke MovieDetailsPage ketika kartu film ditekan.
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -262,168 +437,38 @@ class MovieTicketBooking extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    title, // Judul film.
+                    title,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   SizedBox(height: 5),
-                  Text(
-                    'Genre: $genres', // Genre film.
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    'Rating: $rating', // Rating film.
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    'Harga: $harga', // Harga tiket film.
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Kelas MovieDetailsPage merepresentasikan widget untuk menampilkan detail film.
-class MovieDetailsPage extends StatelessWidget {
-  final String title;
-  final String imagePath;
-  final String genres;
-  final String rating;
-  final String harga;
-
-  const MovieDetailsPage({
-    Key? key,
-    required this.title,
-    required this.imagePath,
-    required this.genres,
-    required this.rating,
-    required this.harga,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Image.asset(
-              imagePath,
-              height: 300,
-              fit: BoxFit.cover,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    'Judul: $title',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 10),
                   Text(
                     'Genre: $genres',
                     style: TextStyle(fontSize: 16),
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 5),
+                  Row(
+                    children: <Widget>[
+                      Icon(Icons.star, size: 16, color: Colors.yellow),
+                      SizedBox(width: 5),
+                      Text(
+                        'Rating: $rating',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 5),
                   Text(
-                    'Rating: $rating',
+                    'Harga: Rp $harga',
                     style: TextStyle(fontSize: 16),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Harga: $harga',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      _showPurchaseDialog(context);
-                    },
-                    child: Text('Beli Tiket'),
-                  ),
-                  SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: () {
-                      _saveToSavedList(context);
-                    },
-                    child: Text('Simpan Film'),
                   ),
                 ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showPurchaseDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Konfirmasi Pembelian'),
-          content: Text('Apakah Anda yakin ingin membeli tiket?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Batal'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _saveTicket(context);
-              },
-              child: Text('Beli'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _saveTicket(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? tiketList = prefs.getStringList('tiket_list') ?? [];
-    tiketList.add(title);
-    await prefs.setStringList('tiket_list', tiketList);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Tiket berhasil dibeli!'),
-      ),
-    );
-  }
-
-  Future<void> _saveToSavedList(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? savedList = prefs.getStringList('saved_list') ?? [];
-    savedList.add(title);
-    await prefs.setStringList('saved_list', savedList);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Film berhasil disimpan!'),
       ),
     );
   }

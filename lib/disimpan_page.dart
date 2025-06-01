@@ -7,41 +7,40 @@ class DisimpanPage extends StatefulWidget {
 }
 
 class _DisimpanPageState extends State<DisimpanPage> {
-  List<String> savedMovies = [];
+  List<String> savedTickets = [];
 
   @override
   void initState() {
     super.initState();
-    _loadSavedMovies();
+    _loadSavedTickets();
   }
 
-  Future<void> _loadSavedMovies() async {
+  void _loadSavedTickets() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? savedList = prefs.getStringList('saved_list');
-    if (savedList != null) {
-      setState(() {
-        savedMovies = savedList;
-      });
-    }
+    setState(() {
+      savedTickets = prefs.getStringList('saved_list') ?? [];
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Disimpan'),
+        title: Text('Tiket Disimpan'),
       ),
-      body: savedMovies.isEmpty
-          ? Center(child: Text('Belum ada film yang disimpan'))
-          : ListView.builder(
-              itemCount: savedMovies.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(savedMovies[index]),
-                  // Tambahkan aksi atau widget lain sesuai kebutuhan.
-                );
-              },
-            ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: savedTickets.isEmpty
+            ? Center(child: Text('Belum ada tiket disimpan.'))
+            : ListView.builder(
+                itemCount: savedTickets.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(savedTickets[index]),
+                  );
+                },
+              ),
+      ),
     );
   }
 }
