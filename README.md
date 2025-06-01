@@ -1,16 +1,30 @@
-# Movie App Flutter
+# Filmkitaa - Aplikasi Pemesanan Tiket Film
 
-A Flutter project for browsing and discovering movies.
+## Deskripsi
+Filmkitaa adalah aplikasi mobile berbasis Flutter untuk pemesanan tiket film. Aplikasi ini memungkinkan pengguna untuk menjelajahi film-film terbaru, melihat detail film, memesan tiket, dan mengelola tiket yang telah dibeli.
 
-## Getting Started
+## Fitur Utama
+- **Katalog Film**: Menampilkan daftar film terbaru dengan poster, genre, dan rating
+- **Detail Film**: Informasi lengkap tentang film termasuk harga tiket
+- **Pemesanan Tiket**: Proses pemesanan tiket yang mudah dan cepat
+- **Manajemen Tiket**: Melihat dan mengelola tiket yang telah dibeli
+- **Wishlist**: Menyimpan film favorit untuk ditonton nanti
+- **Film Offline**: Mengunduh film untuk ditonton tanpa koneksi internet
+- **Rekomendasi Film**: Mendapatkan rekomendasi film berdasarkan preferensi pengguna
+- **Notifikasi**: Pemberitahuan tentang film baru dan promo
 
-This project is a starting point for a Flutter application.
+## Teknologi
+- Flutter
+- Dart
+- Shared Preferences untuk penyimpanan lokal
 
-A few resources to get you started if this is your first Flutter project:
+## Screenshot
+![Screenshot Aplikasi](assets/siksakubur.png)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Cara Menggunakan
+1. Clone repositori ini
+2. Jalankan `flutter pub get` untuk menginstal dependensi
+3. Jalankan `flutter run` untuk memulai aplikasi
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Pengembang
+Fitra Putra Aldi Wijaya
